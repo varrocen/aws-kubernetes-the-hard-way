@@ -13,8 +13,10 @@ Resources:
   KubernetesPrivateSubnetA:
     Type: AWS::EC2::Subnet
     Properties:
-      AvailabilityZone: eu-west-1a
-      CidrBlock: 10.240.0.0/26
+      AvailabilityZone: !Select
+        - 0
+        - Fn::GetAZs: !Ref 'AWS::Region'
+      CidrBlock: !Select [ 0, !Cidr [ !GetAtt KubernetesVPC.CidrBlock, 3, 6 ]]
       MapPublicIpOnLaunch: false
       Tags:
         - Key: Name
@@ -24,8 +26,10 @@ Resources:
   KubernetesPrivateSubnetB:
     Type: AWS::EC2::Subnet
     Properties:
-      AvailabilityZone: eu-west-1b
-      CidrBlock: 10.240.0.64/26
+      AvailabilityZone: !Select
+        - 1
+        - Fn::GetAZs: !Ref 'AWS::Region'
+      CidrBlock: !Select [ 1, !Cidr [ !GetAtt KubernetesVPC.CidrBlock, 3, 6 ]]
       MapPublicIpOnLaunch: false
       Tags:
         - Key: Name
@@ -35,8 +39,10 @@ Resources:
   KubernetesPrivateSubnetC:
     Type: AWS::EC2::Subnet
     Properties:
-      AvailabilityZone: eu-west-1c
-      CidrBlock: 10.240.0.128/26
+      AvailabilityZone: !Select
+        - 2
+        - Fn::GetAZs: !Ref 'AWS::Region'
+      CidrBlock: !Select [ 2, !Cidr [ !GetAtt KubernetesVPC.CidrBlock, 3, 6 ]]
       MapPublicIpOnLaunch: false
       Tags:
         - Key: Name
