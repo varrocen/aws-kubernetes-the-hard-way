@@ -2,7 +2,7 @@
 
 ## Commands
 
-Create VPC :
+Create stack (example VPC) :
 
 ````
 aws cloudformation create-stack \
@@ -10,10 +10,17 @@ aws cloudformation create-stack \
     --template-body file://cloudformation/vpc.yaml
 ````
 
-Update VPC :
+Update stack :
 
 ````
 aws cloudformation update-stack \
     --stack-name kubernetes-vpc \
     --template-body file://cloudformation/vpc.yaml
+````
+
+Delete stack :
+
+````
+aws cloudformation delete-stack \
+    --stack-name kubernetes-vpc
 ````

@@ -10,6 +10,45 @@ Resources:
       Tags:
         - Key: Name
           Value: kubernetes
+  KubernetesPrivateSubnetA:
+    Type: AWS::EC2::Subnet
+    Properties:
+      AvailabilityZone: eu-west-1a
+      CidrBlock: 10.240.0.0/26
+      MapPublicIpOnLaunch: false
+      Tags:
+        - Key: Name
+          Value: kubernetes-private-a
+      VpcId:
+        Ref: KubernetesVPC
+  KubernetesPrivateSubnetB:
+    Type: AWS::EC2::Subnet
+    Properties:
+      AvailabilityZone: eu-west-1b
+      CidrBlock: 10.240.0.64/26
+      MapPublicIpOnLaunch: false
+      Tags:
+        - Key: Name
+          Value: kubernetes-private-b
+      VpcId:
+        Ref: KubernetesVPC
+  KubernetesPrivateSubnetC:
+    Type: AWS::EC2::Subnet
+    Properties:
+      AvailabilityZone: eu-west-1c
+      CidrBlock: 10.240.0.128/26
+      MapPublicIpOnLaunch: false
+      Tags:
+        - Key: Name
+          Value: kubernetes-private-c
+      VpcId:
+        Ref: KubernetesVPC
 Outputs:
   KubernetesVPCId:
     Value: !GetAtt KubernetesVPC.VpcId
+  KubernetesPrivateSubnetAId:
+    Value: !GetAtt KubernetesPrivateSubnetA.SubnetId
+  KubernetesPrivateSubnetBId:
+    Value: !GetAtt KubernetesPrivateSubnetB.SubnetId
+  KubernetesPrivateSubnetCId:
+    Value: !GetAtt KubernetesPrivateSubnetC.SubnetId
