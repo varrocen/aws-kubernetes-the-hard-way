@@ -1,0 +1,41 @@
+---
+Parameters:
+  ImageId:
+    Type: AWS::EC2::Image::Id
+    Default: ami-0d71ea30463e0ff8d
+  InstanceType:
+    Type: String
+    Default: t2.micro
+  SubnetIds:
+    Type: List<AWS::EC2::Subnet::Id>
+Resources:
+  KubernetesControllerNode0:
+    Type: AWS::EC2::Instance
+    Properties:
+      IamInstanceProfile: !Ref KubernetesNodeProfile
+      ImageId: !Ref ImageId
+      InstanceType: !Ref InstanceType
+      Monitoring: false
+      SubnetId: !Select [ 0, !Ref SubnetIds ]
+      Tags:
+        - Key: Name
+          Value: kubernetes-controller-0
+  KubernetesNodeProfile:
+    Type: AWS::IAM::InstanceProfile
+    Properties:
+      Path: /
+      Roles:
+        - !Ref SSMIAMRole
+  SSMIAMRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - ec2.amazonaws.com
+            Action:
+              - sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore

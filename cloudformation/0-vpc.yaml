@@ -18,11 +18,11 @@ Resources:
         - Fn::GetAZs: !Ref 'AWS::Region'
       CidrBlock: !Select [ 0, !Cidr [ !GetAtt KubernetesVPC.CidrBlock, 3, 6 ]]
       MapPublicIpOnLaunch: false
+      VpcId:
+        Ref: KubernetesVPC
       Tags:
         - Key: Name
           Value: kubernetes-private-a
-      VpcId:
-        Ref: KubernetesVPC
   KubernetesPrivateSubnetB:
     Type: AWS::EC2::Subnet
     Properties:
@@ -31,11 +31,11 @@ Resources:
         - Fn::GetAZs: !Ref 'AWS::Region'
       CidrBlock: !Select [ 1, !Cidr [ !GetAtt KubernetesVPC.CidrBlock, 3, 6 ]]
       MapPublicIpOnLaunch: false
+      VpcId:
+        Ref: KubernetesVPC
       Tags:
         - Key: Name
           Value: kubernetes-private-b
-      VpcId:
-        Ref: KubernetesVPC
   KubernetesPrivateSubnetC:
     Type: AWS::EC2::Subnet
     Properties:
@@ -44,11 +44,44 @@ Resources:
         - Fn::GetAZs: !Ref 'AWS::Region'
       CidrBlock: !Select [ 2, !Cidr [ !GetAtt KubernetesVPC.CidrBlock, 3, 6 ]]
       MapPublicIpOnLaunch: false
+      VpcId:
+        Ref: KubernetesVPC
       Tags:
         - Key: Name
           Value: kubernetes-private-c
-      VpcId:
-        Ref: KubernetesVPC
+  SSMVPCEndpoint:
+    Type: AWS::EC2::VPCEndpoint
+    Properties:
+      PrivateDnsEnabled: true
+      ServiceName: !Sub 'com.amazonaws.${AWS::Region}.ssm'
+      SubnetIds:
+        - !Ref KubernetesPrivateSubnetA
+        - !Ref KubernetesPrivateSubnetB
+        - !Ref KubernetesPrivateSubnetC
+      VpcEndpointType: Interface
+      VpcId: !Ref KubernetesVPC
+  EC2MessagesVPCEndpoint:
+    Type: AWS::EC2::VPCEndpoint
+    Properties:
+      PrivateDnsEnabled: true
+      ServiceName: !Sub 'com.amazonaws.${AWS::Region}.ec2messages'
+      SubnetIds:
+        - !Ref KubernetesPrivateSubnetA
+        - !Ref KubernetesPrivateSubnetB
+        - !Ref KubernetesPrivateSubnetC
+      VpcEndpointType: Interface
+      VpcId: !Ref KubernetesVPC
+  SSMMessagesVPCEndpoint:
+    Type: AWS::EC2::VPCEndpoint
+    Properties:
+      PrivateDnsEnabled: true
+      ServiceName: !Sub 'com.amazonaws.${AWS::Region}.ssmmessages'
+      SubnetIds:
+        - !Ref KubernetesPrivateSubnetA
+        - !Ref KubernetesPrivateSubnetB
+        - !Ref KubernetesPrivateSubnetC
+      VpcEndpointType: Interface
+      VpcId: !Ref KubernetesVPC
 Outputs:
   KubernetesVPCId:
     Value: !GetAtt KubernetesVPC.VpcId
