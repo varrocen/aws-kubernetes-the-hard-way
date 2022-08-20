@@ -49,6 +49,26 @@ Resources:
       Tags:
         - Key: Name
           Value: kubernetes-private-c
+  VPCEndpointSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: 'Allow HTTPS'
+      SecurityGroupIngress:
+        - CidrIp: !GetAtt KubernetesVPC.CidrBlock
+          Description: 'Allow inbound HTTPS'
+          IpProtocol: tcp
+          FromPort: 443
+          ToPort: 443
+      SecurityGroupEgress:
+        - CidrIp: !GetAtt KubernetesVPC.CidrBlock
+          Description: 'Allow outbound HTTPS'
+          IpProtocol: tcp
+          FromPort: 1024
+          ToPort: 65535
+      VpcId: !Ref KubernetesVPC
+      Tags:
+        - Key: Name
+          Value: vpc-endpoint
   SSMVPCEndpoint:
     Type: AWS::EC2::VPCEndpoint
     Properties:
@@ -58,6 +78,8 @@ Resources:
         - !Ref KubernetesPrivateSubnetA
         - !Ref KubernetesPrivateSubnetB
         - !Ref KubernetesPrivateSubnetC
+      SecurityGroupIds:
+        - !Ref VPCEndpointSecurityGroup
       VpcEndpointType: Interface
       VpcId: !Ref KubernetesVPC
   EC2MessagesVPCEndpoint:
@@ -69,6 +91,8 @@ Resources:
         - !Ref KubernetesPrivateSubnetA
         - !Ref KubernetesPrivateSubnetB
         - !Ref KubernetesPrivateSubnetC
+      SecurityGroupIds:
+        - !Ref VPCEndpointSecurityGroup
       VpcEndpointType: Interface
       VpcId: !Ref KubernetesVPC
   SSMMessagesVPCEndpoint:
@@ -80,6 +104,8 @@ Resources:
         - !Ref KubernetesPrivateSubnetA
         - !Ref KubernetesPrivateSubnetB
         - !Ref KubernetesPrivateSubnetC
+      SecurityGroupIds:
+        - !Ref VPCEndpointSecurityGroup
       VpcEndpointType: Interface
       VpcId: !Ref KubernetesVPC
 Outputs:
