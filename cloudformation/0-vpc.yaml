@@ -49,22 +49,155 @@ Resources:
       Tags:
         - Key: Name
           Value: kubernetes-private-c
+
+  KubernetesNetworkACL:
+    Type: AWS::EC2::NetworkAcl
+    Properties:
+      VpcId: !Ref KubernetesVPC
+      Tags:
+        - Key: Name
+          Value: kubernetes
+  KubernetesSubnetANetworkAclAssociation:
+    Type: AWS::EC2::SubnetNetworkAclAssociation
+    Properties:
+      NetworkAclId: !Ref KubernetesNetworkACL
+      SubnetId: !Ref KubernetesPrivateSubnetA
+  KubernetesSubnetBNetworkAclAssociation:
+    Type: AWS::EC2::SubnetNetworkAclAssociation
+    Properties:
+      NetworkAclId: !Ref KubernetesNetworkACL
+      SubnetId: !Ref KubernetesPrivateSubnetB
+  KubernetesSubnetCNetworkAclAssociation:
+    Type: AWS::EC2::SubnetNetworkAclAssociation
+    Properties:
+      NetworkAclId: !Ref KubernetesNetworkACL
+      SubnetId: !Ref KubernetesPrivateSubnetC
+  ICMPInboundRule:
+    Type: AWS::EC2::NetworkAclEntry
+    Properties:
+      CidrBlock: !GetAtt KubernetesVPC.CidrBlock
+      Icmp:
+        Code: -1
+        Type: -1
+      NetworkAclId: !Ref KubernetesNetworkACL
+      Protocol: 1
+      RuleAction: allow
+      RuleNumber: 100
+  SSHInboundRule:
+    Type: AWS::EC2::NetworkAclEntry
+    Properties:
+      CidrBlock: !GetAtt KubernetesVPC.CidrBlock
+      NetworkAclId: !Ref KubernetesNetworkACL
+      PortRange:
+        From: 22
+        To: 22
+      Protocol: 6
+      RuleAction: allow
+      RuleNumber: 110
+  HTTPInboundRule:
+    Type: AWS::EC2::NetworkAclEntry
+    Properties:
+      CidrBlock: !GetAtt KubernetesVPC.CidrBlock
+      NetworkAclId: !Ref KubernetesNetworkACL
+      PortRange:
+        From: 80
+        To: 80
+      Protocol: 6
+      RuleAction: allow
+      RuleNumber: 120
+  HTTPSInboundRule:
+    Type: AWS::EC2::NetworkAclEntry
+    Properties:
+      CidrBlock: !GetAtt KubernetesVPC.CidrBlock
+      NetworkAclId: !Ref KubernetesNetworkACL
+      PortRange:
+        From: 443
+        To: 443
+      Protocol: 6
+      RuleAction: allow
+      RuleNumber: 130
+  CustomTCPInboundRule:
+    Type: AWS::EC2::NetworkAclEntry
+    Properties:
+      CidrBlock: !GetAtt KubernetesVPC.CidrBlock
+      NetworkAclId: !Ref KubernetesNetworkACL
+      PortRange:
+        From: 32768
+        To: 65535
+      Protocol: 6
+      RuleAction: allow
+      RuleNumber: 140
+  ICMPOnboundRule:
+    Type: AWS::EC2::NetworkAclEntry
+    Properties:
+      CidrBlock: !GetAtt KubernetesVPC.CidrBlock
+      Egress: true
+      Icmp:
+        Code: -1
+        Type: -1
+      NetworkAclId: !Ref KubernetesNetworkACL
+      Protocol: 1
+      RuleAction: allow
+      RuleNumber: 100
+  SSHOutboundRule:
+    Type: AWS::EC2::NetworkAclEntry
+    Properties:
+      CidrBlock: !GetAtt KubernetesVPC.CidrBlock
+      Egress: true
+      NetworkAclId: !Ref KubernetesNetworkACL
+      PortRange:
+        From: 22
+        To: 22
+      Protocol: 6
+      RuleAction: allow
+      RuleNumber: 110
+  HTTPOnboundRule:
+    Type: AWS::EC2::NetworkAclEntry
+    Properties:
+      CidrBlock: !GetAtt KubernetesVPC.CidrBlock
+      Egress: true
+      NetworkAclId: !Ref KubernetesNetworkACL
+      PortRange:
+        From: 80
+        To: 80
+      Protocol: 6
+      RuleAction: allow
+      RuleNumber: 120
+  HTTPSOnboundRule:
+    Type: AWS::EC2::NetworkAclEntry
+    Properties:
+      CidrBlock: !GetAtt KubernetesVPC.CidrBlock
+      Egress: true
+      NetworkAclId: !Ref KubernetesNetworkACL
+      PortRange:
+        From: 443
+        To: 443
+      Protocol: 6
+      RuleAction: allow
+      RuleNumber: 130
+  CustomTCPOnboundRule:
+    Type: AWS::EC2::NetworkAclEntry
+    Properties:
+      CidrBlock: !GetAtt KubernetesVPC.CidrBlock
+      Egress: true
+      NetworkAclId: !Ref KubernetesNetworkACL
+      PortRange:
+        From: 32768
+        To: 65535
+      Protocol: 6
+      RuleAction: allow
+      RuleNumber: 140
+
   VPCEndpointSecurityGroup:
     Type: AWS::EC2::SecurityGroup
     Properties:
-      GroupDescription: 'Allow HTTPS'
+      GroupDescription: 'Allow inbound HTTPS'
       SecurityGroupIngress:
         - CidrIp: !GetAtt KubernetesVPC.CidrBlock
           Description: 'Allow inbound HTTPS'
           IpProtocol: tcp
           FromPort: 443
           ToPort: 443
-      SecurityGroupEgress:
-        - CidrIp: !GetAtt KubernetesVPC.CidrBlock
-          Description: 'Allow outbound HTTPS'
-          IpProtocol: tcp
-          FromPort: 1024
-          ToPort: 65535
       VpcId: !Ref KubernetesVPC
       Tags:
         - Key: Name
@@ -108,6 +241,7 @@ Resources:
         - !Ref VPCEndpointSecurityGroup
       VpcEndpointType: Interface
       VpcId: !Ref KubernetesVPC
+
 Outputs:
   KubernetesVPCId:
     Value: !GetAtt KubernetesVPC.VpcId
