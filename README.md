@@ -1,5 +1,7 @@
 # AWS Kubernetes The Hard Way
 
+[![cfn_nag](https://github.com/varrocen/aws-kubernetes-the-hard-way/actions/workflows/cfn-nag.yaml/badge.svg?branch=main)](https://github.com/varrocen/aws-kubernetes-the-hard-way/actions/workflows/cfn-nag.yaml)
+
 ## Commands
 
 ### VPC stack
