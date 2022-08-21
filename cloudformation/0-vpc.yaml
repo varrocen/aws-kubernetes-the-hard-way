@@ -198,6 +198,12 @@ Resources:
           IpProtocol: tcp
           FromPort: 443
           ToPort: 443
+      SecurityGroupEgress:
+        - CidrIp: !GetAtt KubernetesVPC.CidrBlock
+          Description: 'Deny all outbound'
+          IpProtocol: tcp
+          FromPort: 1
+          ToPort: 1
       VpcId: !Ref KubernetesVPC
       Tags:
         - Key: Name
