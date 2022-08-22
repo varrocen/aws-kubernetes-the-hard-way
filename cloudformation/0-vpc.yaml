@@ -11,18 +11,6 @@ Resources:
         - Key: Name
           Value: kubernetes
 
-  KubernetesInternetGateway:
-    Type: AWS::EC2::InternetGateway
-    Properties:
-      Tags:
-        - Key: Name
-          Value: kubernetes
-  VPCGatewayAttachment:
-    Type: AWS::EC2::VPCGatewayAttachment
-    Properties:
-      VpcId: !Ref KubernetesVPC
-      InternetGatewayId: !Ref KubernetesInternetGateway
-
   KubernetesPublicSubnetA:
     Type: AWS::EC2::Subnet
     Properties:
@@ -31,8 +19,7 @@ Resources:
         - Fn::GetAZs: !Ref 'AWS::Region'
       CidrBlock: !Select [ 0, !Cidr [ !GetAtt KubernetesVPC.CidrBlock, 6, 5 ]]
       MapPublicIpOnLaunch: false
-      VpcId:
-        Ref: KubernetesVPC
+      VpcId: !Ref KubernetesVPC
       Tags:
         - Key: Name
           Value: kubernetes-public-a
@@ -44,8 +31,7 @@ Resources:
         - Fn::GetAZs: !Ref 'AWS::Region'
       CidrBlock: !Select [ 1, !Cidr [ !GetAtt KubernetesVPC.CidrBlock, 6, 5 ]]
       MapPublicIpOnLaunch: false
-      VpcId:
-        Ref: KubernetesVPC
+      VpcId: !Ref KubernetesVPC
       Tags:
         - Key: Name
           Value: kubernetes-public-b
@@ -57,8 +43,7 @@ Resources:
         - Fn::GetAZs: !Ref 'AWS::Region'
       CidrBlock: !Select [ 2, !Cidr [ !GetAtt KubernetesVPC.CidrBlock, 6, 5 ]]
       MapPublicIpOnLaunch: false
-      VpcId:
-        Ref: KubernetesVPC
+      VpcId: !Ref KubernetesVPC
       Tags:
         - Key: Name
           Value: kubernetes-public-c
@@ -70,8 +55,7 @@ Resources:
         - Fn::GetAZs: !Ref 'AWS::Region'
       CidrBlock: !Select [ 3, !Cidr [ !GetAtt KubernetesVPC.CidrBlock, 6, 5 ]]
       MapPublicIpOnLaunch: false
-      VpcId:
-        Ref: KubernetesVPC
+      VpcId: !Ref KubernetesVPC
       Tags:
         - Key: Name
           Value: kubernetes-private-a
@@ -83,8 +67,7 @@ Resources:
         - Fn::GetAZs: !Ref 'AWS::Region'
       CidrBlock: !Select [ 4, !Cidr [ !GetAtt KubernetesVPC.CidrBlock, 6, 5 ]]
       MapPublicIpOnLaunch: false
-      VpcId:
-        Ref: KubernetesVPC
+      VpcId: !Ref KubernetesVPC
       Tags:
         - Key: Name
           Value: kubernetes-private-b
@@ -96,11 +79,51 @@ Resources:
         - Fn::GetAZs: !Ref 'AWS::Region'
       CidrBlock: !Select [ 5, !Cidr [ !GetAtt KubernetesVPC.CidrBlock, 6, 5 ]]
       MapPublicIpOnLaunch: false
-      VpcId:
-        Ref: KubernetesVPC
+      VpcId: !Ref KubernetesVPC
       Tags:
         - Key: Name
           Value: kubernetes-private-c
+
+  KubernetesPublicRouteTable:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref KubernetesVPC
+      Tags:
+        - Key: Name
+          Value: kubernetes-public
+  PublicASubnetRouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      RouteTableId: !Ref KubernetesPublicRouteTable
+      SubnetId: !Ref KubernetesPublicSubnetA
+  PublicBSubnetRouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      RouteTableId: !Ref KubernetesPublicRouteTable
+      SubnetId: !Ref KubernetesPublicSubnetB
+  PublicCSubnetRouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      RouteTableId: !Ref KubernetesPublicRouteTable
+      SubnetId: !Ref KubernetesPublicSubnetC
+
+  KubernetesInternetGateway:
+    Type: AWS::EC2::InternetGateway
+    Properties:
+      Tags:
+        - Key: Name
+          Value: kubernetes
+  VPCGatewayAttachment:
+    Type: AWS::EC2::VPCGatewayAttachment
+    Properties:
+      VpcId: !Ref KubernetesVPC
+      InternetGatewayId: !Ref KubernetesInternetGateway
+  InternetGatewayRoute:
+    Type: AWS::EC2::Route
+    Properties:
+      DestinationCidrBlock: 0.0.0.0/0
+      GatewayId: !Ref KubernetesInternetGateway
+      RouteTableId: !Ref KubernetesPublicRouteTable
 
   KubernetesNetworkACL:
     Type: AWS::EC2::NetworkAcl
