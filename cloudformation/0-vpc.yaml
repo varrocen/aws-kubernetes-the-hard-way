@@ -10,13 +10,53 @@ Resources:
       Tags:
         - Key: Name
           Value: kubernetes
+
+  KubernetesPublicSubnetA:
+    Type: AWS::EC2::Subnet
+    Properties:
+      AvailabilityZone: !Select
+        - 0
+        - Fn::GetAZs: !Ref 'AWS::Region'
+      CidrBlock: !Select [ 0, !Cidr [ !GetAtt KubernetesVPC.CidrBlock, 6, 5 ]]
+      MapPublicIpOnLaunch: false
+      VpcId:
+        Ref: KubernetesVPC
+      Tags:
+        - Key: Name
+          Value: kubernetes-public-a
+  KubernetesPublicSubnetB:
+    Type: AWS::EC2::Subnet
+    Properties:
+      AvailabilityZone: !Select
+        - 1
+        - Fn::GetAZs: !Ref 'AWS::Region'
+      CidrBlock: !Select [ 1, !Cidr [ !GetAtt KubernetesVPC.CidrBlock, 6, 5 ]]
+      MapPublicIpOnLaunch: false
+      VpcId:
+        Ref: KubernetesVPC
+      Tags:
+        - Key: Name
+          Value: kubernetes-public-b
+  KubernetesPublicSubnetC:
+    Type: AWS::EC2::Subnet
+    Properties:
+      AvailabilityZone: !Select
+        - 2
+        - Fn::GetAZs: !Ref 'AWS::Region'
+      CidrBlock: !Select [ 2, !Cidr [ !GetAtt KubernetesVPC.CidrBlock, 6, 5 ]]
+      MapPublicIpOnLaunch: false
+      VpcId:
+        Ref: KubernetesVPC
+      Tags:
+        - Key: Name
+          Value: kubernetes-public-c
   KubernetesPrivateSubnetA:
     Type: AWS::EC2::Subnet
     Properties:
       AvailabilityZone: !Select
         - 0
         - Fn::GetAZs: !Ref 'AWS::Region'
-      CidrBlock: !Select [ 0, !Cidr [ !GetAtt KubernetesVPC.CidrBlock, 3, 6 ]]
+      CidrBlock: !Select [ 3, !Cidr [ !GetAtt KubernetesVPC.CidrBlock, 6, 5 ]]
       MapPublicIpOnLaunch: false
       VpcId:
         Ref: KubernetesVPC
@@ -29,7 +69,7 @@ Resources:
       AvailabilityZone: !Select
         - 1
         - Fn::GetAZs: !Ref 'AWS::Region'
-      CidrBlock: !Select [ 1, !Cidr [ !GetAtt KubernetesVPC.CidrBlock, 3, 6 ]]
+      CidrBlock: !Select [ 4, !Cidr [ !GetAtt KubernetesVPC.CidrBlock, 6, 5 ]]
       MapPublicIpOnLaunch: false
       VpcId:
         Ref: KubernetesVPC
@@ -42,7 +82,7 @@ Resources:
       AvailabilityZone: !Select
         - 2
         - Fn::GetAZs: !Ref 'AWS::Region'
-      CidrBlock: !Select [ 2, !Cidr [ !GetAtt KubernetesVPC.CidrBlock, 3, 6 ]]
+      CidrBlock: !Select [ 5, !Cidr [ !GetAtt KubernetesVPC.CidrBlock, 6, 5 ]]
       MapPublicIpOnLaunch: false
       VpcId:
         Ref: KubernetesVPC
@@ -57,17 +97,32 @@ Resources:
       Tags:
         - Key: Name
           Value: kubernetes
-  KubernetesSubnetANetworkAclAssociation:
+  PublicSubnetANetworkAclAssociation:
+    Type: AWS::EC2::SubnetNetworkAclAssociation
+    Properties:
+      NetworkAclId: !Ref KubernetesNetworkACL
+      SubnetId: !Ref KubernetesPublicSubnetA
+  PublicSubnetBNetworkAclAssociation:
+    Type: AWS::EC2::SubnetNetworkAclAssociation
+    Properties:
+      NetworkAclId: !Ref KubernetesNetworkACL
+      SubnetId: !Ref KubernetesPublicSubnetB
+  PublicSubnetCNetworkAclAssociation:
+    Type: AWS::EC2::SubnetNetworkAclAssociation
+    Properties:
+      NetworkAclId: !Ref KubernetesNetworkACL
+      SubnetId: !Ref KubernetesPublicSubnetC
+  PrivateSubnetANetworkAclAssociation:
     Type: AWS::EC2::SubnetNetworkAclAssociation
     Properties:
       NetworkAclId: !Ref KubernetesNetworkACL
       SubnetId: !Ref KubernetesPrivateSubnetA
-  KubernetesSubnetBNetworkAclAssociation:
+  PrivateSubnetBNetworkAclAssociation:
     Type: AWS::EC2::SubnetNetworkAclAssociation
     Properties:
       NetworkAclId: !Ref KubernetesNetworkACL
       SubnetId: !Ref KubernetesPrivateSubnetB
-  KubernetesSubnetCNetworkAclAssociation:
+  PrivateSubnetCNetworkAclAssociation:
     Type: AWS::EC2::SubnetNetworkAclAssociation
     Properties:
       NetworkAclId: !Ref KubernetesNetworkACL
@@ -251,6 +306,12 @@ Resources:
 Outputs:
   KubernetesVPCId:
     Value: !GetAtt KubernetesVPC.VpcId
+  KubernetesPublicSubnetAId:
+    Value: !GetAtt KubernetesPublicSubnetA.SubnetId
+  KubernetesPublicSubnetBId:
+    Value: !GetAtt KubernetesPublicSubnetB.SubnetId
+  KubernetesPublicSubnetCId:
+    Value: !GetAtt KubernetesPublicSubnetC.SubnetId
   KubernetesPrivateSubnetAId:
     Value: !GetAtt KubernetesPrivateSubnetA.SubnetId
   KubernetesPrivateSubnetBId:
