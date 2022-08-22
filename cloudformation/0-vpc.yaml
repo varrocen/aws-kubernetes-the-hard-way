@@ -11,6 +11,18 @@ Resources:
         - Key: Name
           Value: kubernetes
 
+  KubernetesInternetGateway:
+    Type: AWS::EC2::InternetGateway
+    Properties:
+      Tags:
+        - Key: Name
+          Value: kubernetes
+  VPCGatewayAttachment:
+    Type: AWS::EC2::VPCGatewayAttachment
+    Properties:
+      VpcId: !Ref KubernetesVPC
+      InternetGatewayId: !Ref KubernetesInternetGateway
+
   KubernetesPublicSubnetA:
     Type: AWS::EC2::Subnet
     Properties:
