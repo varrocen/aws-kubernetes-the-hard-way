@@ -47,6 +47,7 @@ Resources:
       Tags:
         - Key: Name
           Value: kubernetes-public-c
+
   KubernetesPrivateSubnetA:
     Type: AWS::EC2::Subnet
     Properties:
@@ -107,6 +108,29 @@ Resources:
       RouteTableId: !Ref KubernetesPublicRouteTable
       SubnetId: !Ref KubernetesPublicSubnetC
 
+  KubernetesPrivateRouteTable:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref KubernetesVPC
+      Tags:
+        - Key: Name
+          Value: kubernetes-private
+  PrivateASubnetRouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      RouteTableId: !Ref KubernetesPrivateRouteTable
+      SubnetId: !Ref KubernetesPrivateSubnetA
+  PrivateBSubnetRouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      RouteTableId: !Ref KubernetesPrivateRouteTable
+      SubnetId: !Ref KubernetesPrivateSubnetB
+  PrivateCSubnetRouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      RouteTableId: !Ref KubernetesPrivateRouteTable
+      SubnetId: !Ref KubernetesPrivateSubnetC
+
   KubernetesInternetGateway:
     Type: AWS::EC2::InternetGateway
     Properties:
@@ -124,6 +148,21 @@ Resources:
       DestinationCidrBlock: 0.0.0.0/0
       GatewayId: !Ref KubernetesInternetGateway
       RouteTableId: !Ref KubernetesPublicRouteTable
+
+  KubernetesNatGateway:
+    Type: AWS::EC2::NatGateway
+    Properties:
+      ConnectivityType: private
+      SubnetId: !Ref KubernetesPrivateSubnetA
+      Tags:
+        - Key: Name
+          Value: kubernetes
+  NatGatewayRoute:
+    Type: AWS::EC2::Route
+    Properties:
+      DestinationCidrBlock: 0.0.0.0/0
+      NatGatewayId: !Ref KubernetesNatGateway
+      RouteTableId: !Ref KubernetesPrivateRouteTable
 
   KubernetesNetworkACL:
     Type: AWS::EC2::NetworkAcl
