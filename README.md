@@ -6,7 +6,7 @@
 
 ### VPC stack
 
-Create VPC stack :
+Create VPC stack:
 
 ````
 aws cloudformation create-stack \
@@ -14,7 +14,7 @@ aws cloudformation create-stack \
     --template-body file://cloudformation/0-vpc.yaml
 ````
 
-Update VPC stack :
+Update VPC stack:
 
 ````
 aws cloudformation update-stack \
@@ -22,7 +22,7 @@ aws cloudformation update-stack \
     --template-body file://cloudformation/0-vpc.yaml
 ````
 
-Delete VPC stack :
+Delete VPC stack:
 
 ````
 aws cloudformation delete-stack \
@@ -31,7 +31,7 @@ aws cloudformation delete-stack \
 
 ### EC2 stack
 
-Create EC2 stack :
+Create EC2 stack:
 
 ````
 export SUBNET_IDS=$(aws ec2 describe-subnets --filters "Name=default-for-az,Values=false" --query "Subnets[*]" | jq -r '. | sort_by(.AvailabilityZone) | map(.SubnetId) | join(",")')
@@ -42,7 +42,7 @@ aws cloudformation create-stack \
     --capabilities CAPABILITY_IAM
 ````
 
-Update EC2 stack :
+Update EC2 stack:
 
 ````
 aws cloudformation update-stack \
@@ -52,7 +52,7 @@ aws cloudformation update-stack \
     --capabilities CAPABILITY_IAM
 ````
 
-Delete EC2 stack :
+Delete EC2 stack:
 
 ````
 aws cloudformation delete-stack \

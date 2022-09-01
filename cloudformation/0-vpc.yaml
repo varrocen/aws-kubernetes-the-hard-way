@@ -1,4 +1,12 @@
 ---
+Parameters:
+  MyRangeIP:
+    Type: String
+    Default: ''
+
+Conditions:
+  AllowPublicSSHAccess: !Not [ !Equals [ '', !Ref MyRangeIP ] ]
+
 Resources:
   KubernetesVPC:
     Type: AWS::EC2::VPC
@@ -17,7 +25,7 @@ Resources:
       AvailabilityZone: !Select
         - 0
         - Fn::GetAZs: !Ref 'AWS::Region'
-      CidrBlock: !Select [ 0, !Cidr [ !GetAtt KubernetesVPC.CidrBlock, 6, 5 ]]
+      CidrBlock: !Select [ 0, !Cidr [ !GetAtt KubernetesVPC.CidrBlock, 6, 5 ] ]
       MapPublicIpOnLaunch: false
       VpcId: !Ref KubernetesVPC
       Tags:
@@ -29,7 +37,7 @@ Resources:
       AvailabilityZone: !Select
         - 1
         - Fn::GetAZs: !Ref 'AWS::Region'
-      CidrBlock: !Select [ 1, !Cidr [ !GetAtt KubernetesVPC.CidrBlock, 6, 5 ]]
+      CidrBlock: !Select [ 1, !Cidr [ !GetAtt KubernetesVPC.CidrBlock, 6, 5 ] ]
       MapPublicIpOnLaunch: false
       VpcId: !Ref KubernetesVPC
       Tags:
@@ -41,7 +49,7 @@ Resources:
       AvailabilityZone: !Select
         - 2
         - Fn::GetAZs: !Ref 'AWS::Region'
-      CidrBlock: !Select [ 2, !Cidr [ !GetAtt KubernetesVPC.CidrBlock, 6, 5 ]]
+      CidrBlock: !Select [ 2, !Cidr [ !GetAtt KubernetesVPC.CidrBlock, 6, 5 ] ]
       MapPublicIpOnLaunch: false
       VpcId: !Ref KubernetesVPC
       Tags:
@@ -54,7 +62,7 @@ Resources:
       AvailabilityZone: !Select
         - 0
         - Fn::GetAZs: !Ref 'AWS::Region'
-      CidrBlock: !Select [ 3, !Cidr [ !GetAtt KubernetesVPC.CidrBlock, 6, 5 ]]
+      CidrBlock: !Select [ 3, !Cidr [ !GetAtt KubernetesVPC.CidrBlock, 6, 5 ] ]
       MapPublicIpOnLaunch: false
       VpcId: !Ref KubernetesVPC
       Tags:
@@ -66,7 +74,7 @@ Resources:
       AvailabilityZone: !Select
         - 1
         - Fn::GetAZs: !Ref 'AWS::Region'
-      CidrBlock: !Select [ 4, !Cidr [ !GetAtt KubernetesVPC.CidrBlock, 6, 5 ]]
+      CidrBlock: !Select [ 4, !Cidr [ !GetAtt KubernetesVPC.CidrBlock, 6, 5 ] ]
       MapPublicIpOnLaunch: false
       VpcId: !Ref KubernetesVPC
       Tags:
@@ -78,7 +86,7 @@ Resources:
       AvailabilityZone: !Select
         - 2
         - Fn::GetAZs: !Ref 'AWS::Region'
-      CidrBlock: !Select [ 5, !Cidr [ !GetAtt KubernetesVPC.CidrBlock, 6, 5 ]]
+      CidrBlock: !Select [ 5, !Cidr [ !GetAtt KubernetesVPC.CidrBlock, 6, 5 ] ]
       MapPublicIpOnLaunch: false
       VpcId: !Ref KubernetesVPC
       Tags:
@@ -164,158 +172,206 @@ Resources:
       NatGatewayId: !Ref KubernetesNatGateway
       RouteTableId: !Ref KubernetesPrivateRouteTable
 
-  KubernetesNetworkACL:
+  KubernetesPublicNetworkACL:
     Type: AWS::EC2::NetworkAcl
     Properties:
       VpcId: !Ref KubernetesVPC
       Tags:
         - Key: Name
-          Value: kubernetes
+          Value: kubernetes-public
   PublicSubnetANetworkAclAssociation:
     Type: AWS::EC2::SubnetNetworkAclAssociation
     Properties:
-      NetworkAclId: !Ref KubernetesNetworkACL
+      NetworkAclId: !Ref KubernetesPublicNetworkACL
       SubnetId: !Ref KubernetesPublicSubnetA
   PublicSubnetBNetworkAclAssociation:
     Type: AWS::EC2::SubnetNetworkAclAssociation
     Properties:
-      NetworkAclId: !Ref KubernetesNetworkACL
+      NetworkAclId: !Ref KubernetesPublicNetworkACL
       SubnetId: !Ref KubernetesPublicSubnetB
   PublicSubnetCNetworkAclAssociation:
     Type: AWS::EC2::SubnetNetworkAclAssociation
     Properties:
-      NetworkAclId: !Ref KubernetesNetworkACL
+      NetworkAclId: !Ref KubernetesPublicNetworkACL
       SubnetId: !Ref KubernetesPublicSubnetC
+
+  PublicHTTPInboundRule:
+    Type: AWS::EC2::NetworkAclEntry
+    Properties:
+      CidrBlock: 0.0.0.0/0
+      NetworkAclId: !Ref KubernetesPublicNetworkACL
+      PortRange:
+        From: 80
+        To: 80
+      Protocol: 6
+      RuleAction: allow
+      RuleNumber: 100
+  PublicHTTPSInboundRule:
+    Type: AWS::EC2::NetworkAclEntry
+    Properties:
+      CidrBlock: 0.0.0.0/0
+      NetworkAclId: !Ref KubernetesPublicNetworkACL
+      PortRange:
+        From: 443
+        To: 443
+      Protocol: 6
+      RuleAction: allow
+      RuleNumber: 110
+  PublicSSHInboundRule:
+    Type: AWS::EC2::NetworkAclEntry
+    Condition: AllowPublicSSHAccess
+    Properties:
+      CidrBlock: !Ref MyRangeIP
+      NetworkAclId: !Ref KubernetesPublicNetworkACL
+      PortRange:
+        From: 22
+        To: 22
+      Protocol: 6
+      RuleAction: allow
+      RuleNumber: 120
+  PublicTCPInboundRule:
+    Type: AWS::EC2::NetworkAclEntry
+    Properties:
+      CidrBlock: 0.0.0.0/0
+      NetworkAclId: !Ref KubernetesPublicNetworkACL
+      PortRange:
+        From: 1024
+        To: 65535
+      Protocol: 6
+      RuleAction: allow
+      RuleNumber: 130
+
+  PublicHTTPOnboundRule:
+    Type: AWS::EC2::NetworkAclEntry
+    Properties:
+      CidrBlock: 0.0.0.0/0
+      NetworkAclId: !Ref KubernetesPublicNetworkACL
+      Egress: true
+      PortRange:
+        From: 80
+        To: 80
+      Protocol: 6
+      RuleAction: allow
+      RuleNumber: 100
+  PublicHTTPSOnboundRule:
+    Type: AWS::EC2::NetworkAclEntry
+    Properties:
+      CidrBlock: 0.0.0.0/0
+      NetworkAclId: !Ref KubernetesPublicNetworkACL
+      Egress: true
+      PortRange:
+        From: 443
+        To: 443
+      Protocol: 6
+      RuleAction: allow
+      RuleNumber: 110
+  PublicTCPOnboundRule:
+    Type: AWS::EC2::NetworkAclEntry
+    Properties:
+      CidrBlock: 0.0.0.0/0
+      NetworkAclId: !Ref KubernetesPublicNetworkACL
+      Egress: true
+      PortRange:
+        From: 32768
+        To: 65535
+      Protocol: 6
+      RuleAction: allow
+      RuleNumber: 120
+  PublicSSHOutboundRule:
+    Type: AWS::EC2::NetworkAclEntry
+    Properties:
+      CidrBlock: !GetAtt KubernetesVPC.CidrBlock
+      NetworkAclId: !Ref KubernetesPublicNetworkACL
+      Egress: true
+      PortRange:
+        From: 22
+        To: 22
+      Protocol: 6
+      RuleAction: allow
+      RuleNumber: 130
+
+  KubernetesPrivateNetworkACL:
+    Type: AWS::EC2::NetworkAcl
+    Properties:
+      VpcId: !Ref KubernetesVPC
+      Tags:
+        - Key: Name
+          Value: kubernetes-private
   PrivateSubnetANetworkAclAssociation:
     Type: AWS::EC2::SubnetNetworkAclAssociation
     Properties:
-      NetworkAclId: !Ref KubernetesNetworkACL
+      NetworkAclId: !Ref KubernetesPrivateNetworkACL
       SubnetId: !Ref KubernetesPrivateSubnetA
   PrivateSubnetBNetworkAclAssociation:
     Type: AWS::EC2::SubnetNetworkAclAssociation
     Properties:
-      NetworkAclId: !Ref KubernetesNetworkACL
+      NetworkAclId: !Ref KubernetesPrivateNetworkACL
       SubnetId: !Ref KubernetesPrivateSubnetB
   PrivateSubnetCNetworkAclAssociation:
     Type: AWS::EC2::SubnetNetworkAclAssociation
     Properties:
-      NetworkAclId: !Ref KubernetesNetworkACL
+      NetworkAclId: !Ref KubernetesPrivateNetworkACL
       SubnetId: !Ref KubernetesPrivateSubnetC
-  ICMPInboundRule:
+
+  PrivateSSHInboundRule:
     Type: AWS::EC2::NetworkAclEntry
     Properties:
       CidrBlock: !GetAtt KubernetesVPC.CidrBlock
-      Icmp:
-        Code: -1
-        Type: -1
-      NetworkAclId: !Ref KubernetesNetworkACL
-      Protocol: 1
-      RuleAction: allow
-      RuleNumber: 100
-  SSHInboundRule:
-    Type: AWS::EC2::NetworkAclEntry
-    Properties:
-      CidrBlock: !GetAtt KubernetesVPC.CidrBlock
-      NetworkAclId: !Ref KubernetesNetworkACL
+      NetworkAclId: !Ref KubernetesPrivateNetworkACL
       PortRange:
         From: 22
         To: 22
       Protocol: 6
       RuleAction: allow
-      RuleNumber: 110
-  HTTPInboundRule:
+      RuleNumber: 100
+  PrivateTCPInboundRule:
     Type: AWS::EC2::NetworkAclEntry
     Properties:
       CidrBlock: !GetAtt KubernetesVPC.CidrBlock
-      NetworkAclId: !Ref KubernetesNetworkACL
+      NetworkAclId: !Ref KubernetesPrivateNetworkACL
+      PortRange:
+        From: 1024
+        To: 65535
+      Protocol: 6
+      RuleAction: allow
+      RuleNumber: 110
+
+  PrivateHTTPOnboundRule:
+    Type: AWS::EC2::NetworkAclEntry
+    Properties:
+      CidrBlock: !GetAtt KubernetesVPC.CidrBlock
+      NetworkAclId: !Ref KubernetesPrivateNetworkACL
+      Egress: true
       PortRange:
         From: 80
         To: 80
       Protocol: 6
-      RuleAction: allow
-      RuleNumber: 120
-  HTTPSInboundRule:
-    Type: AWS::EC2::NetworkAclEntry
-    Properties:
-      CidrBlock: !GetAtt KubernetesVPC.CidrBlock
-      NetworkAclId: !Ref KubernetesNetworkACL
-      PortRange:
-        From: 443
-        To: 443
-      Protocol: 6
-      RuleAction: allow
-      RuleNumber: 130
-  CustomTCPInboundRule:
-    Type: AWS::EC2::NetworkAclEntry
-    Properties:
-      CidrBlock: !GetAtt KubernetesVPC.CidrBlock
-      NetworkAclId: !Ref KubernetesNetworkACL
-      PortRange:
-        From: 32768
-        To: 65535
-      Protocol: 6
-      RuleAction: allow
-      RuleNumber: 140
-  ICMPOnboundRule:
-    Type: AWS::EC2::NetworkAclEntry
-    Properties:
-      CidrBlock: !GetAtt KubernetesVPC.CidrBlock
-      Egress: true
-      Icmp:
-        Code: -1
-        Type: -1
-      NetworkAclId: !Ref KubernetesNetworkACL
-      Protocol: 1
       RuleAction: allow
       RuleNumber: 100
-  SSHOutboundRule:
+  PrivateHTTPSOnboundRule:
     Type: AWS::EC2::NetworkAclEntry
     Properties:
       CidrBlock: !GetAtt KubernetesVPC.CidrBlock
+      NetworkAclId: !Ref KubernetesPrivateNetworkACL
       Egress: true
-      NetworkAclId: !Ref KubernetesNetworkACL
-      PortRange:
-        From: 22
-        To: 22
-      Protocol: 6
-      RuleAction: allow
-      RuleNumber: 110
-  HTTPOnboundRule:
-    Type: AWS::EC2::NetworkAclEntry
-    Properties:
-      CidrBlock: !GetAtt KubernetesVPC.CidrBlock
-      Egress: true
-      NetworkAclId: !Ref KubernetesNetworkACL
-      PortRange:
-        From: 80
-        To: 80
-      Protocol: 6
-      RuleAction: allow
-      RuleNumber: 120
-  HTTPSOnboundRule:
-    Type: AWS::EC2::NetworkAclEntry
-    Properties:
-      CidrBlock: !GetAtt KubernetesVPC.CidrBlock
-      Egress: true
-      NetworkAclId: !Ref KubernetesNetworkACL
       PortRange:
         From: 443
         To: 443
       Protocol: 6
       RuleAction: allow
-      RuleNumber: 130
-  CustomTCPOnboundRule:
+      RuleNumber: 110
+  PrivateTCPOnboundRule:
     Type: AWS::EC2::NetworkAclEntry
     Properties:
       CidrBlock: !GetAtt KubernetesVPC.CidrBlock
+      NetworkAclId: !Ref KubernetesPrivateNetworkACL
       Egress: true
-      NetworkAclId: !Ref KubernetesNetworkACL
       PortRange:
         From: 32768
         To: 65535
       Protocol: 6
       RuleAction: allow
-      RuleNumber: 140
+      RuleNumber: 120
 
   VPCEndpointSecurityGroup:
     Type: AWS::EC2::SecurityGroup
